@@ -2,7 +2,6 @@ const { Telegraf, Markup } = require("telegraf");
 const moment = require("moment-timezone");
 const express = require("express");
 
-// const botToken = '6784050286:AAERYE8oUO-E8IOQR6TnOdkbliPpPI_bqyg';
 const botToken = process.env.TOKEN;
 const bot = new Telegraf(botToken);
 
@@ -19,7 +18,7 @@ async function startBot() {
       .launch(
         {
         webhook: {
-          domain: 'https://telegram-app-2b8p.onrender.com',
+          domain: 'https://bot-tg-zuo4.onrender.com',
           port: process.env.PORT,
         },
       })
