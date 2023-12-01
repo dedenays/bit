@@ -22,7 +22,7 @@ async function startBot() {
           port: process.env.PORT,
         },
       })
-      // ();
+      // .launch();
   } catch (error) {
     console.error("Error starting bot:", error.message);
   }
@@ -219,6 +219,7 @@ function sendScheduledPhotos() {
     console.log(`Фото відправлено о ${currentTime.format("HH:mm")}`);
     lastPhotoSentTime = moment().tz("Europe/Kiev");
   }
+  console.log(photoQueue)
 
   console.log(`Кількість фото у черзі: ${photoQueue.length}`);
 }
@@ -234,7 +235,7 @@ function shouldSend(currentTime, isNightTime) {
 
 async function sendScheduledPhoto(photo) {
   try {
-    if (!photo.isGroup) {
+    if (!photo.isGroup || !photo.media_group_id) {
       photoQueue.shift();
       await bot.telegram.sendMediaGroup(selectedChannelId, [
         {
