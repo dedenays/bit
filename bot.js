@@ -82,7 +82,7 @@ bot.hears("Дата останнього посту", async (ctx) => {
   let isGroupPhoto;
   let photoGroupId = undefined;
 
-  const photos = await Bot1.findAll();
+  const photos = await Bot2.findAll();
 
   photos.forEach((photo) => {
     if (!isGroupPhoto || photo.media_group_id !== photoGroupId) {
