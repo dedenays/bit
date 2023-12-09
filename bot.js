@@ -11,7 +11,7 @@ let selectedChannelId = +process.env.CHANEL;
 let userId = +process.env.USER;
 let lastPhotoSentTime = null;
 let isGroup = false;
-let sign;
+let sign = "[Новая папка (5)](https://t.me/novaya_papka5)";
 let count = 0;
 
 async function startBot() {
