@@ -89,12 +89,12 @@ bot.hears("Дата останнього посту", async (ctx) => {
       isGroupPhoto = photo.isGroup;
       photoGroupId =
         photo.media_group_id === null ? undefined : photo.media_group_id;
-      const isNightTime = currentTime.hour() >= 23 && currentTime.hour() < 20;
+      const isNightTime = currentTime.hour() >= 23 || currentTime.hour() < 20;
 
       if (
         isNightTime &&
-        currentTime?.hours() > 23 &&
-        currentTime?.hours() < 11
+        (currentTime?.hours() > 23 ||
+        currentTime?.hours() < 11)
       ) {
         currentTime.set("hours", 11);
       } else {
@@ -107,9 +107,9 @@ bot.hears("Дата останнього посту", async (ctx) => {
     }
   });
 
-  const isNightTime = currentTime.hour() >= 23 && currentTime.hour() < 20;
+  const isNightTime = currentTime.hour() >= 23 || currentTime.hour() < 20;
 
-  if (isNightTime && currentTime?.hours() > 23 && currentTime.hours() < 11) {
+  if (isNightTime && (currentTime?.hours() > 23 || currentTime.hours() < 11)) {
     currentTime.set("hours", 11);
     currentTime.set("minutes", 0);
   } else {
@@ -248,7 +248,7 @@ setInterval(() => {
 // }, 1000);
 
 function calculateSendTime(currentTime, lastPhotoSentTime) {
-  const isNightTime = currentTime.hour() >= 23 && currentTime.hour() < 20;
+  const isNightTime = currentTime.hour() >= 23 || currentTime.hour() < 20;
 
   if (lastPhotoSentTime) {
     const nextSendTime = lastPhotoSentTime
@@ -262,7 +262,7 @@ function calculateSendTime(currentTime, lastPhotoSentTime) {
 
 async function sendScheduledPhotos() {
   const currentTime = moment().tz("Europe/Kiev");
-  const isNightTime = currentTime.hour() >= 23 && currentTime.hour() < 20;
+  const isNightTime = currentTime.hour() >= 23 || currentTime.hour() < 20;
 
   if (
     count > 0 &&
@@ -283,7 +283,7 @@ async function sendScheduledPhotos() {
 
 function shouldSend(currentTime, isNightTime) {
   if (isNightTime) {
-    if (currentTime?.hours() > 23 && currentTime.hours() < 10) {
+    if (currentTime?.hours() > 23 || currentTime.hours() < 10) {
       return false;
     }
 
