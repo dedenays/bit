@@ -1,4 +1,8 @@
 const toMarkdownLink = (text, entities, isSing) => {
+  if (!text) {
+    return "";
+  }
+
   const start = isSing ? 1 : 0;
   let i = start;
 
@@ -57,6 +61,10 @@ const toMarkdownLink = (text, entities, isSing) => {
 const toFixLink = (text) => {
   let isLink = false;
 
+  if (!text) {
+    return "";
+  }
+
   return text
     .split("")
     .map((el) => {
@@ -97,6 +105,10 @@ const toFixLink = (text) => {
 };
 
 const toFixText = (text) => {
+  if (!text) {
+    return "";
+  }
+
   return text
     .replace(/\_/g, "\\_")
     .replace(/\*/g, "\\*")
