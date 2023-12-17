@@ -73,7 +73,7 @@ bot.hears("Усього постів", async (ctx) => {
   let countPosts = 0;
   const postsIds = [];
 
-  const photos = await Bot4.findAll();
+  const photos = await Bot2.findAll();
 
   photos.forEach((photo) => {
     if (photo.isGroup) {

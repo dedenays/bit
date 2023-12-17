@@ -10,6 +10,11 @@ const toMarkdownLink = (text, entities, isSing) => {
     .join(" ")
     .split("")
     .map((ch, idx) => {
+      if (!entities || !entities[i]) {
+        resultMark += ch;
+        return ch;
+      }
+
       if (entities[i].type === "hashtag") {
         resultMark += ch;
         i++;
