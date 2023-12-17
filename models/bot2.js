@@ -10,6 +10,7 @@ const Bot2 = sequelize.define(
     file_unique_id: DataTypes.STRING,
     media_group_id: DataTypes.STRING,
     isGroup: DataTypes.BOOLEAN,
+    description: DataTypes.STRING,
   },
   {
     tableName: "bot2s",

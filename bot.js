@@ -2,6 +2,7 @@ const { Telegraf, Markup } = require("telegraf");
 const moment = require("moment-timezone");
 const { Bot2 } = require("./models/bot2");
 const { connect } = require("./utils/db");
+const { toMarkdownLink, toFixLink, toFixText } = require("./utils/text");
 require("dotenv").config();
 
 const botToken = process.env.TOKEN;
@@ -43,7 +44,7 @@ bot.start((ctx) => {
     "Виберіть команду:",
     Markup.keyboard([
       ["Змінити тип постингу"],
-      ["Усього фотографій", "Дата останнього посту"],
+      ["Усього постів", "Усього фотографій", "Дата останнього посту"],
     ]).resize()
   );
 });
@@ -61,6 +62,34 @@ bot.command("setchannel", (ctx) => {
 bot.hears("Змінити тип постингу", (ctx) => {
   isGroup = !isGroup;
   ctx.reply(`Змінено групування фотографій: ${isGroup}`);
+});
+
+bot.hears("Усього постів", async (ctx) => {
+  if (ctx.message.from.id !== userId) {
+    ctx.reply("ти хто");
+    return;
+  }
+
+  let countPosts = 0;
+  const postsIds = [];
+
+  const photos = await Bot4.findAll();
+
+  photos.forEach((photo) => {
+    if (photo.isGroup) {
+      if (
+        !postsIds.includes(photo.media_group_id) ||
+        photo.media_group_id === null
+      ) {
+        countPosts++;
+        postsIds.push(photo.media_group_id);
+      }
+    } else {
+      countPosts++;
+    }
+  });
+
+  ctx.reply(`Кількість постів у черзі: ${countPosts}`);
 });
 
 bot.hears("Усього фотографій", (ctx) => {
@@ -93,8 +122,7 @@ bot.hears("Дата останнього посту", async (ctx) => {
 
       if (
         isNightTime &&
-        (currentTime?.hours() > 23 ||
-        currentTime?.hours() < 11)
+        (currentTime?.hours() > 23 || currentTime?.hours() < 11)
       ) {
         currentTime.set("hours", 11);
       } else {
@@ -139,32 +167,7 @@ bot.command("setSign", (ctx) => {
     return;
   }
 
-  const text = ctx.message.text
-    .split(" ")
-    .slice(1)
-    .join(" ")
-    .split("")
-    .map((ch, idx) => {
-      if (
-        idx ===
-        ctx.message.entities[1].offset - ctx.message.entities[0].length - 1
-      ) {
-        return "[" + ch;
-      }
-
-      if (
-        idx ===
-        ctx.message.entities[1].offset +
-          ctx.message.entities[1].length -
-          ctx.message.entities[0].length -
-          2
-      ) {
-        return ch + "](" + ctx.message.entities[1].url + ")";
-      }
-
-      return ch;
-    })
-    .join("");
+  const text = toMarkdownLink(ctx.message.text, ctx.message.entities, true);
 
   //= "[text](https://www.google.com/)";
 
@@ -202,6 +205,14 @@ bot.on("photo", async (ctx) => {
     return;
   }
 
+  let description = "";
+
+  if (!("forward_from" in ctx.message) && ctx.message.caption) {
+    description =
+      toMarkdownLink(ctx.message.caption, ctx.message.caption_entities, false) +
+      "\n\n\n";
+  }
+
   const samePhoto = await Bot2.findOne({
     where: {
       file_unique_id: file_unique_id,
@@ -231,6 +242,7 @@ bot.on("photo", async (ctx) => {
     file_unique_id,
     media_group_id,
     isGroup,
+    description,
   });
 
   count = await Bot2.count();
@@ -283,7 +295,7 @@ async function sendScheduledPhotos() {
 
 function shouldSend(currentTime, isNightTime) {
   if (isNightTime) {
-    if (currentTime?.hours() > 23 || currentTime.hours() < 10) {
+    if (currentTime?.hours() > 23 || currentTime.hours() < 11) {
       return false;
     }
 
@@ -297,49 +309,12 @@ function shouldSend(currentTime, isNightTime) {
 async function sendScheduledPhoto(photo) {
   try {
     if (!photo.isGroup || !photo.media_group_id) {
-      let isLink = false;
       await bot.telegram.sendMediaGroup(selectedChannelId, [
         {
           type: "photo",
           media: photo.file_id,
-          caption: sign
-            ? sign
-                .split("")
-                .map((el) => {
-                  if (el === "[") {
-                    isLink = true;
-                    return el;
-                  }
-                  if (el === "]") {
-                    isLink = false;
-                    return el;
-                  }
-                  if (isLink) {
-                    return el
-                      .replace(/\_/g, "\\_")
-                      .replace(/\*/g, "\\*")
-                      .replace(/\[/g, "\\[")
-                      .replace(/\]/g, "\\]")
-                      .replace(/\(/g, "\\(")
-                      .replace(/\)/g, "\\)")
-                      .replace(/\~/g, "\\~")
-                      .replace(/\`/g, "\\`")
-                      .replace(/\>/g, "\\>")
-                      .replace(/\#/g, "\\#")
-                      .replace(/\+/g, "\\+")
-                      .replace(/\-/g, "\\-")
-                      .replace(/\=/g, "\\=")
-                      .replace(/\|/g, "\\|")
-                      .replace(/\{/g, "\\{")
-                      .replace(/\}/g, "\\}")
-                      .replace(/\./g, "\\.")
-                      .replace(/\!/g, "\\!");
-                  }
-
-                  return el;
-                })
-                .join("")
-            : sign,
+          caption:
+            toFixLink(photo.description) + (sign ? toFixLink(sign) : sign),
           parse_mode: "MarkdownV2",
         },
       ]);
@@ -357,48 +332,11 @@ async function sendScheduledPhoto(photo) {
 
       const media = photosByGroupId.map((el, idx) => {
         if (idx === 0) {
-          let isLink = false;
           return {
             type: "photo",
             media: el.file_id,
-            caption: sign
-              ? sign
-                  .split("")
-                  .map((el) => {
-                    if (el === "[") {
-                      isLink = true;
-                      return el;
-                    }
-                    if (el === "]") {
-                      isLink = false;
-                      return el;
-                    }
-                    if (isLink) {
-                      return el
-                        .replace(/\_/g, "\\_")
-                        .replace(/\*/g, "\\*")
-                        .replace(/\[/g, "\\[")
-                        .replace(/\]/g, "\\]")
-                        .replace(/\(/g, "\\(")
-                        .replace(/\)/g, "\\)")
-                        .replace(/\~/g, "\\~")
-                        .replace(/\`/g, "\\`")
-                        .replace(/\>/g, "\\>")
-                        .replace(/\#/g, "\\#")
-                        .replace(/\+/g, "\\+")
-                        .replace(/\-/g, "\\-")
-                        .replace(/\=/g, "\\=")
-                        .replace(/\|/g, "\\|")
-                        .replace(/\{/g, "\\{")
-                        .replace(/\}/g, "\\}")
-                        .replace(/\./g, "\\.")
-                        .replace(/\!/g, "\\!");
-                    }
-
-                    return el;
-                  })
-                  .join("")
-              : sign,
+            caption:
+              toFixLink(photo.description) + (sign ? toFixLink(sign) : sign),
             parse_mode: "MarkdownV2",
           };
         } else {
