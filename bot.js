@@ -210,7 +210,7 @@ bot.on("photo", async (ctx) => {
   if (!("forward_from" in ctx.message) && ctx.message.caption) {
     description =
       toMarkdownLink(ctx.message.caption, ctx.message.caption_entities, false) +
-      "\n\n\n";
+      "\n\n";
   }
 
   const samePhoto = await Bot2.findOne({
