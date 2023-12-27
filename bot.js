@@ -207,11 +207,15 @@ bot.on("photo", async (ctx) => {
 
   let description = "";
 
-  if (!("forward_from" in ctx.message) && ctx.message.caption) {
+	if (!("forward_from" in ctx.message) && ctx.message.caption && ctx.message.caption_entities) {
     description =
       toMarkdownLink(ctx.message.caption, ctx.message.caption_entities, false) +
       "\n\n";
-  }
+  } else if (!ctx.message.caption_entities) {
+		description =
+      toFixText(ctx.message.caption) +
+      "\n\n";
+	}
 
   const samePhoto = await Bot2.findOne({
     where: {
