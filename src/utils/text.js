@@ -59,11 +59,11 @@ const toMarkdownLink = (text, entities, isSing) => {
 };
 
 const toFixLink = (text) => {
-  let isLink = false;
-
   if (!text) {
     return "";
   }
+
+  let isLink = false;
 
   return text
     .split("")
