@@ -16,7 +16,7 @@ const botToken = process.env.TOKEN;
 const bot = new Telegraf(botToken);
 
 const selectedChannelId = +process.env.CHANEL;
-const userId = +process.env.USER;
+const userId = +process.env.TG_USER;
 let lastPhotoSentTime = null;
 let sign = process.env.CHANEL_SIGN;
 let count = 0;
