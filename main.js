@@ -181,7 +181,7 @@ async function getCount(ctx) {
 }
 
 async function getPicturesCount(ctx) {
-  ctx.reply(`Кількість фото у черзі: ${count}`);
+  ctx.reply(`Кількість фото у черзі: ${count}, не обробленні: ${countRaw}`);
 }
 
 async function getLastDate(ctx) {
@@ -313,6 +313,7 @@ async function createPhoto(ctx) {
 
 async function setCountRaw() {
   countRaw = await botService.getCountAllRaw();
+  console.log('---------------------------setCountRaw', countRaw)
 }
 
 async function createRawPhoto(photo, currentTime, chatId, file_id, file_unique_id, media_group_id, ctx) {
@@ -476,7 +477,6 @@ async function photoHendling(file_id, file_unique_id) {
       });
 
       await botService.updateImageUrlByFUI(imageUrl, file_unique_id);
-      await setCountRaw();
 
       count = await botService.getCountAll();
     } catch (error) {
@@ -489,10 +489,12 @@ async function sendScheduledPhotos() {
   const currentTime = moment().tz("Europe/Kiev");
   const isNightTime = currentTime.hour() >= 23 || currentTime.hour() < 20;
 
-  if(countRaw) {
+  if (countRaw) {
     const photo = await botService.getNextPost();
+    console.log('----------------------------------countRaw', countRaw);
+    console.log('----------------------------------photo', JSON.stringify(photo));
     await photoHendling(photo.file_id, photo.file_unique_id);
-    return;
+    await setCountRaw();
   }
 
   if (
@@ -503,6 +505,11 @@ async function sendScheduledPhotos() {
       lastPhotoSentTime?.minute() !== currentTime?.minute())
   ) {
     const photo = await botService.getNextPost();
+
+    if(!photo.imageUrl) {
+      await setCountRaw();
+      return;
+    }
 
     await deleteFromBin(currentTime);
 
@@ -518,7 +525,6 @@ async function sendScheduledPhotos() {
 
     console.log(`Фото відправлено о ${currentTime.format("HH:mm")}`);
     lastPhotoSentTime = moment().tz("Europe/Kiev");
-    await setCountRaw();
   }
 
   console.log(`Кількість фото у черзі: ${count}, countRaw: ${countRaw}`);
