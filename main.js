@@ -35,6 +35,7 @@ async function startBot() {
 
     count = await botService.getCountAll();
     settings = await settingsService.getSettings();
+    countRaw = await setCountRaw();
 
     await bot.telegram.deleteWebhook();
 
@@ -313,6 +314,7 @@ async function createPhoto(ctx) {
 
 async function setCountRaw() {
   countRaw = await botService.getCountAllRaw();
+  console.log('setCountRaw', countRaw);
 }
 
 async function createRawPhoto(photo, currentTime, chatId, file_id, file_unique_id, media_group_id, ctx) {
@@ -490,6 +492,11 @@ async function sendScheduledPhotos() {
 
   if (countRaw) {
     const photo = await botService.getNextRawPost();
+
+    if(!photo) {
+      await setCountRaw();
+      return;
+    }
     await photoHendling(photo.file_id, photo.file_unique_id);
     await setCountRaw();
   }
