@@ -333,25 +333,37 @@ async function createPhoto(ctx) {
     messageId: ctx.message.message_id,
   });
 
-  const file_info = await ctx.telegram.getFile(file_id);
-  const file_url = await ctx.telegram.getFileLink(file_id);
-  const file_href = file_url.href;
+  let file_path;
+  let file_stream;
+
+  try {
+    const file_info = await ctx.telegram.getFile(file_id);
+    const file_url = await ctx.telegram.getFileLink(file_id);
+    const file_href = file_url.href;
+
+    const response = await axios({
+        method: "get",
+        url: file_href,
+        responseType: "stream",
+    });
+
+    file_path = `${file_id}.${file_info.file_path.split(".").pop()}`;
+
+    file_stream = fs.createWriteStream(file_path);
+
+    file_stream.on("error", (error) => {
+      console.error("Ошибка при записи файла:", error.message);
+    });
+
+    response.data.pipe(file_stream);
+  } catch (error) {
+    console.error("Ошибка при обработке файла:", error.message);
+    ctx.reply("Произошла ошибка при загрузке или обработке файла.");
+  }
 
   // const watermarkName = "dh";
   // const watermarkName = "bg";
   const watermarkName = "np";
-
-  const response = await axios({
-    method: "get",
-    url: file_href,
-    responseType: "stream",
-  });
-
-  const file_path = `${file_id}.${file_info.file_path.split(".").pop()}`;
-
-  const file_stream = fs.createWriteStream(file_path);
-
-  response.data.pipe(file_stream);
 
   const watermarkPath = "watermark/" + `${watermarkName}.png`;
 
