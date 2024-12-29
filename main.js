@@ -521,7 +521,7 @@ async function sendScheduledPhotos() {
     await setCountRaw();
   }
 
-  console.log(`Кількість фото у черзі: ${count}`);
+  console.log(`Кількість фото у черзі: ${count}, countRaw: ${countRaw}`);
 }
 
 function shouldSend(currentTime, isNightTime) {
