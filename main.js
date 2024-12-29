@@ -20,6 +20,7 @@ const userId = +process.env.TG_USER;
 let lastPhotoSentTime = null;
 let sign = process.env.CHANEL_SIGN;
 let count = 0;
+let countRaw = 0;
 let settings = null;
 
 async function startBot() {
@@ -280,6 +281,21 @@ async function deleteAll() {
   count = await botService.getCountAll();
 }
 
+async function createPhoto1(ctx) {
+  const photo = ctx.message.photo[ctx.message.photo.length - 1];
+
+  const currentTime = moment().tz("Europe/Kiev");
+
+  const chatId = ctx.message.chat.id;
+  const file_id = photo.file_id;
+  const file_unique_id = photo.file_unique_id;
+  const media_group_id = ctx.message.media_group_id;
+
+  await createRawPhoto(photo, currentTime, chatId, file_id, file_unique_id, media_group_id, ctx);
+
+  await photoHendling(photo, currentTime, chatId, file_id, file_unique_id, media_group_id, ctx);
+}
+
 async function createPhoto(ctx) {
   const photo = ctx.message.photo[ctx.message.photo.length - 1];
 
@@ -290,6 +306,16 @@ async function createPhoto(ctx) {
   const file_unique_id = photo.file_unique_id;
   const media_group_id = ctx.message.media_group_id;
 
+  await createRawPhoto(photo, currentTime, chatId, file_id, file_unique_id, media_group_id, ctx);
+
+  await setCountRaw();
+}
+
+async function setCountRaw() {
+  countRaw = await botService.getCountAllRaw();
+}
+
+async function createRawPhoto(photo, currentTime, chatId, file_id, file_unique_id, media_group_id, ctx) {
   let description = "";
 
   if (
@@ -332,13 +358,16 @@ async function createPhoto(ctx) {
     description,
     messageId: ctx.message.message_id,
   });
+}
 
+async function photoHendling(file_id, file_unique_id) {
   let file_path;
   let file_stream;
 
   try {
-    const file_info = await ctx.telegram.getFile(file_id);
-    const file_url = await ctx.telegram.getFileLink(file_id);
+    const file_info = await bot.telegram.getFile(file_id);
+    const file_url = await bot.telegram.getFileLink(file_id);
+
     const file_href = file_url.href;
 
     const response = await axios({
@@ -358,7 +387,6 @@ async function createPhoto(ctx) {
     response.data.pipe(file_stream);
   } catch (error) {
     console.error("Ошибка при обработке файла:", error.message);
-    ctx.reply("Произошла ошибка при загрузке или обработке файла.");
   }
 
   // const watermarkName = "dh";
@@ -448,6 +476,7 @@ async function createPhoto(ctx) {
       });
 
       await botService.updateImageUrlByFUI(imageUrl, file_unique_id);
+      await setCountRaw();
 
       count = await botService.getCountAll();
     } catch (error) {
@@ -459,6 +488,12 @@ async function createPhoto(ctx) {
 async function sendScheduledPhotos() {
   const currentTime = moment().tz("Europe/Kiev");
   const isNightTime = currentTime.hour() >= 23 || currentTime.hour() < 20;
+
+  if(countRaw) {
+    const photo = await botService.getNextPost();
+    await photoHendling(photo.file_id, photo.file_unique_id);
+    return;
+  }
 
   if (
     settings.isPosting &&
@@ -483,6 +518,7 @@ async function sendScheduledPhotos() {
 
     console.log(`Фото відправлено о ${currentTime.format("HH:mm")}`);
     lastPhotoSentTime = moment().tz("Europe/Kiev");
+    await setCountRaw();
   }
 
   console.log(`Кількість фото у черзі: ${count}`);
