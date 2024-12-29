@@ -313,7 +313,6 @@ async function createPhoto(ctx) {
 
 async function setCountRaw() {
   countRaw = await botService.getCountAllRaw();
-  console.log('---------------------------setCountRaw', countRaw)
 }
 
 async function createRawPhoto(photo, currentTime, chatId, file_id, file_unique_id, media_group_id, ctx) {
@@ -490,9 +489,7 @@ async function sendScheduledPhotos() {
   const isNightTime = currentTime.hour() >= 23 || currentTime.hour() < 20;
 
   if (countRaw) {
-    const photo = await botService.getNextPost();
-    console.log('----------------------------------countRaw', countRaw);
-    console.log('----------------------------------photo', JSON.stringify(photo));
+    const photo = await botService.getNextRawPost();
     await photoHendling(photo.file_id, photo.file_unique_id);
     await setCountRaw();
   }
