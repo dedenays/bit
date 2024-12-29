@@ -228,6 +228,7 @@ module.exports = {
   create,
   updateImageUrlByFUI,
   getNextPost,
+  getNextRawPost,
   getLastFromBin,
   deleteFromBinById,
   getFirstPhotoMediaGroup,
