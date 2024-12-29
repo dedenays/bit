@@ -134,6 +134,30 @@ async function getNextPost() {
   return Post.findOne(options);
 }
 
+async function getNextRawPost() {
+  let options = {
+    where: {
+      imageUrl: {
+        [Op.eq]: null,
+      },
+      will_delete_date: {
+        [Op.eq]: null,
+      },
+    },
+  };
+
+  const settings = await settingsService.getSettings();
+
+  if (!settings.isRandom) {
+    options = {
+      ...options,
+      order: [["messageId", "ASC"]],
+    };
+  }
+
+  return Post.findOne(options);
+}
+
 async function getLastFromBin() {
   return Post.findOne({
     where: {
