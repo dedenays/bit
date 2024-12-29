@@ -524,6 +524,7 @@ async function sendScheduledPhotos() {
     }
 
     console.log(`Фото відправлено о ${currentTime.format("HH:mm")}`);
+    await setCountRaw();
     lastPhotoSentTime = moment().tz("Europe/Kiev");
   }
 
