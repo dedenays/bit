@@ -45,6 +45,19 @@ async function getCountAll() {
   });
 }
 
+async function getCountAllRaw() {
+  return Post.count({
+    where: {
+      imageUrl: {
+        [Op.eq]: null,
+      },
+      will_delete_date: {
+        [Op.eq]: null,
+      },
+    },
+  });
+}
+
 async function getOneByFUI(file_unique_id) {
   return Post.findOne({
     where: {
