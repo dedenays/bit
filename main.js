@@ -35,7 +35,7 @@ async function startBot() {
 
     count = await botService.getCountAll();
     settings = await settingsService.getSettings();
-    countRaw = await setCountRaw();
+    await setCountRaw();
 
     await bot.telegram.deleteWebhook();
 
