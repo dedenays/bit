@@ -198,6 +198,7 @@ module.exports = {
   getAll,
   deleteAll,
   getCountAll,
+  getCountAllRaw,
   getOneByFUI,
   addToBinByFUI,
   create,
